@@ -65,7 +65,7 @@ app.post("/uploadResume", function(req, res){
                 mode : 'text',
                 encoding : 'utf8',
                 pythonOptions : ['-u'],
-                scriptPath : 'D:/projects/brainChange',
+                scriptPath : 'D:/projects/brainChange/resumeInfoChecker',
                 pythonPath : 'C:/Python3.7.2/python',
                 args : [req.session.fileLocation.slice(2,req.session.fileLocation.length), req.session.imageLocation.slice(2,req.session.imageLocation.length) + '/temp',req.session.fileName]
             };
@@ -138,7 +138,7 @@ app.post("/uploadResume", function(req, res){
                 mode : 'text',
                 encoding : 'utf8',
                 pythonOptions : ['-u'],
-                scriptPath : 'D:/projects/brainChange',
+                scriptPath : 'D:/projects/brainChange/resumeInfoChecker',
                 pythonPath : 'C:/Python3.7.2/python',
                 args : [req.session.fileLocation.slice(2,req.session.fileLocation.length), req.session.imageLocation.slice(2,req.session.imageLocation.length) + '/temp', req.session.fileName]
             };
