@@ -1,0 +1,29 @@
+{
+  "name": "brainchange",
+  "version": "1.0.0",
+  "description": "simple pdf and docx parser",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "puspakChakraborty",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "csv-parser": "^2.3.2",
+    "csv-writer": "^1.6.0",
+    "docx-pdf": "0.0.1",
+    "ejs": "^3.0.1",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.6",
+    "express-session": "^1.17.0",
+    "fs": "0.0.1-security",
+    "mysql": "^2.18.1",
+    "pdf-parse": "^1.1.1",
+    "pdf-parser": "^1.0.5",
+    "python-shell": "^1.0.8",
+    "word2pdf": "^1.0.8",
+    "xlsx": "^0.15.6",
+    "zip-folder": "^1.0.0"
+  }
+}

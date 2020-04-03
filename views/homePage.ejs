@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .collapsible {
+        background-color: #777;
+        color: white;
+        cursor: pointer;
+        padding: 18px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 15px;
+        }
+
+        .active, .collapsible:hover {
+        background-color: #555;
+        }
+
+        .content {
+        padding: 0 18px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.2s ease-out;
+        background-color: #f1f1f1;
+        }
+
+        .card {
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+        width: 22%;
+        border-radius: 5px;
+        float : left;
+        text-align: center;
+        }
+
+        .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+        }
+
+        .container {
+        padding: 2px 16px;
+        }
+    </style>
+
+    <script>
+        function disAppear() { 
+            document.getElementById("infoTag").style.display="none";  
+        }
+
+        var _validFileExtensions = [".pdf", ".docx"];    
+        
+        function Validate(oForm) {
+            //console.log(arrInputs);
+            var arrInputs = oForm.getElementsByTagName("input");
+            
+            for (var i = 0; i < arrInputs.length; i++) {
+                var oInput = arrInputs[i];
+                if (oInput.type == "file") {
+                    var sFileName = oInput.value;
+                    if (sFileName.length > 0) {
+                        var blnValid = false;
+                        for (var j = 0; j < _validFileExtensions.length; j++) {
+                            var sCurExtension = _validFileExtensions[j];
+                            if (sFileName.substr(sFileName.length - sCurExtension.length, sCurExtension.length).toLowerCase() == sCurExtension.toLowerCase()) {
+                                blnValid = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!blnValid) {
+                            alert("Allowed extensions are: " + _validFileExtensions.join(", "));
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+    </script>
+
+    <head>
+        <title>BrainChange</title>
+        
+    </head>
+    <body style="background-color: #f1f1f1;">
+        <div style="border-bottom: 10px; border-left: 20px;">
+            <h1>Upload your resume</h1><br>
+            <form action = "/uploadResume" method = "POST" enctype="multipart/form-data" onsubmit="return Validate(this);">
+                <label for = 'resumeFile'>Upload Resume in .docx / .pdf format : </label>
+                <input type = 'file' name='resumeFile' id = 'resumeFile'/><br><br>
+                <input type='submit' class="w3-btn w3-black"/><br><br>
+              </form>
+        </div>
+        <button class="collapsible" id = "infoTag" style= "<%= visibility %>">FileInfo</button>
+        <div  style= "<%= visibility %>" id = "infoTag" class = "content" >
+            <div class = "card">
+                <h3>Your file contains the following : </h3>
+                <div style = "text-align: left; margin-left: 15px;">
+                    <em><b>No of pages : </b><%= noOfPages %></em><br>
+                    <em><b>No of lines : </b><%= noOfLines %></em><br>
+                    <em><b>No of characters : </b><%= noOfCharacters %></em><br>
+                    <em><b>Fonts used :</b></em><br>
+                        <%if(fontsUsed != 0){%>
+                            <%fontsUsed.forEach(function(ele){%>
+                            <div  style = "text-align: left; margin-left: 15px;"><em> <%= ele %> </em></div>
+                        <%});}%>
+                    <em><b>No of tables : </b><%= noOfTables %></em><br>
+                    <em><b>No of images : </b><%= noOfImages %></em><br>
+                </div>
+            </div>
+            <div class = "card" style="margin-left: 30px;">
+                <h2> Download csv </h2>
+                <form action = '/downloadResumeCSV' method="POST">
+                    <input type='submit' value="download" class="w3-btn w3-black">
+                </form>
+            </div>
+            <div class = "card" style="margin-left: 30px;">
+                <h2> Download photos </h2>
+                <form action = '/downloadPhotos' method="POST">
+                    <input type="submit" value="download"class="w3-btn w3-black">
+                </form>
+            </div>
+
+            <div class = "card" style="margin-left: 30px;">
+                <h2> Download XLSX </h2>
+                <form action = '/downloadXLSX' method="POST">
+                    <input type="submit" value="download" class="w3-btn w3-black">
+                </form>
+            </div>
+        </div>
+
+        <script>
+
+            function disAppear() { 
+               document.getElementById("infoTag").style.display="none";  
+            }
+            
+            var coll = document.getElementsByClassName("collapsible");
+            var i;
+            
+            for (i = 0; i < coll.length; i++) {
+              coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.maxHeight){
+                  content.style.maxHeight = null;
+                } else {
+                  content.style.maxHeight = content.scrollHeight + "px";
+                } 
+              });
+            }
+        </script>
+
+
+    </body>
+</html>

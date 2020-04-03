@@ -1,0 +1,65 @@
+1. Dependencies for this project
+    a.Install gs952w32.exe(Ghost script) and add the 'lib' and 'bin' folder of your installation path to Environment variables. (eg in my case : 'C:\Program Files (x86)\gs\gs9.52\lib' and 'C:\Program Files (x86)\gs\gs9.52\bin' are added to Environment variables)
+    b.Install libreOffice and add 'program' folder of libreOffice to Environment variables. (eg in my case : 'C:\Program Files\LibreOffice\program' is added to Environment variables)
+    
+    Setting up python :
+
+    c.Install python3 and add base folder and 'Scripts' folder to Environment variables. (eg in my case : 'C:\Python3.7.2\Scripts\' and 'C:\Python3.7.2' are added to Environment variables)
+    d.For installing PyPDF2 run this in cmd - 'pip install PyPDF2'
+    e.For installing camelot : 
+        i>go to the folder camelot(provided in the project directory)
+        ii>run the following command in cmd - pip install ".[cv]"
+    f.Open the following file in a text editor and make the following changes :
+        i>Go to routes folder and open processingData.js in text editor
+        ii>Go to line no 69.
+        iii>Change 'C:/Python3.7.2/python' to your location of 'python.exe'. For eg if your 'python.exe' is present in 'C:/ProgramFiles/Python3.7.2' then you must change line 69 to 'C:/ProgramFiles/Python3.7.2/python'
+        iv>Go to line no 68.
+        v>Change 'D:/projects/brainChange' to your location of the project . For eg if your 'brainChange' folder that I'm providing you is located in 'C:/Users/projects' then you must change line 68 to 'C:/Users/projects/brainChange'
+        vi>Go to line no 142 and change similarly as you did on line no 69.
+        vii>Go to line no 141 and change similarly as you did on line no 68.
+    
+    Setting up nodeJS
+    
+    g.Install nodeJs. I'm providing you with the latest installer - 'node-v12.16.1-x64.msi'
+    h.During nodeJS installation make sure it is 'added to path'.
+    
+    Setting up MySQL server :
+
+    i.Download mySQL server from googleDrive.(Please don't use the latest version as it was giving some connectivity issues with nodeJS)
+    j.Create database named - 'resumeInfo'  with no password protection.
+    k.Open routes/database.js file in text editor and enter your mysql root password inside the quotes in line 6
+    l.Start mysql notifier (from start) and click on it in system tray and start mysql server.(If it's not already started)
+    m.Start mysql 5.6 command line client and enter your mysql root password.
+    n.create database 'resumeInfo'. (run command 'create database resumeInfo;') (It should return Query Ok)
+
+    (I went with a lower version of MySQL server(5.6) because the latest version 8.0 required some server modifications that were giving connectivity issues with nodeJS, the 5.6 version seems to work just fine)
+
+
+2. Running the server
+    o.Go to the project folder ('brainChange'), open cmd and run node index.js (wait some time and it should 'Connect to the db')
+    p.Then you can go to your webBrowser and go to 'localhost:3000' and the website should run.
+    q.During running of the server if your PC is not connected to the web then the css won't load.
+
+(Please do let me know in case of some difficulty)
+
+3. Features added
+    a.Uploading of both .docx and .pdf is supported.
+    b.The information provided after processing are :
+        i>No of lines
+        ii>No of characters
+        iii>No of pages
+        iv>Fonts used
+        v>No of images
+        vi>No of tables
+    c.Download .csv of above information.
+    d.Download .xlsx of above information.
+    e.Download the images in .zip.
+
+4.Cons and problem faced
+    a.The processing is slow due to 
+        i>Multiple folder and files has to be created in the file system during processing of a document.
+        ii>Calls to python script from nodeJS.(I couldn't get past this because some libraries provided in python are not there in nodeJS)
+    b.In case of large documents or document with convoluted formatting the line count and character count is not accurate.
+    c.I couldn't extract the font size.
+
+Thank you.
