@@ -24,7 +24,7 @@ router.get('/downloadXLSX',function(req,res,next){
 
 
 router.get('/home',function(req,res,next){
-    res.render('homePage',{visibility : "display:none;", fontsUsed : "0", noOfTables : "0", noOfImages : "0", noOfPages : "0", noOfLines : "0", noOfCharacters : "0"});
+    res.render('homePage',{visibility : "display:none;", fontsUsed : "0", noOfTables : "0", noOfImages : "0", noOfPages : "0", noOfLines : "0", noOfCharacters : "0", email : "0", phNos : "0"});
 });
 
 module.exports = router;

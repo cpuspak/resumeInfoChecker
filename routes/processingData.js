@@ -30,6 +30,18 @@ var XLSX = require('xlsx');
 
 var app = express();
 
+function extractEmails (text){
+    return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+}
+
+function extracMobileNo (text){
+    return text.match(/[\s|\:|\-|\=][\+]?((\([0-9]{2,3}\)\s*|[0-9]{2,3}\-)?[0-9]{2,3}-[0-9]{4,10})|([0-9]{8,10})/igm);
+}
+
+function extractCandidateName (text){
+    return text.match(/([A-Z][a-z]+[\s+][A-Z][a-z]+)|([A-Z]+[\s+][A-Z]+)/g)
+}
+
 var currentCount = 0;
 
 app.use(bodyParser.json());
@@ -43,7 +55,7 @@ var {PythonShell} = require( 'python-shell');
 
 //session is working fine for different devices ... if time permits later I'll implement the session for every new tab
 app.post("/uploadResume", function(req, res){
-    var query = "CREATE TABLE IF NOT EXISTS UPLOADEDDOCUMENTS (SLNO INT AUTO_INCREMENT PRIMARY KEY, FILENAME VARCHAR(30) UNIQUE NOT NULL, FILELOCATION VARCHAR(500) UNIQUE NOT NULL, FONTS VARCHAR(200) NOT NULL, IMAGES INT NOT NULL, TABLES INT, FILETYPE VARCHAR(6), LINESNO INT, CHARACTERS BIGINT, PAGES INT)";
+    var query = "CREATE TABLE IF NOT EXISTS UPLOADEDDOCUMENTS (SLNO INT AUTO_INCREMENT PRIMARY KEY, FILENAME VARCHAR(30) UNIQUE NOT NULL, FILELOCATION VARCHAR(500) UNIQUE NOT NULL, FONTS VARCHAR(200) NOT NULL, IMAGES INT NOT NULL, TABLES INT, FILETYPE VARCHAR(6), LINESNO INT, CHARACTERS BIGINT, PAGES INT, EMAIL VARCHAR(200), PHNO VARCHAR(20))";
     connection.query(query);
     if(req.files){
         var fileName = req.files.resumeFile.name;
@@ -75,13 +87,24 @@ app.post("/uploadResume", function(req, res){
                     throw err;
                 // Results is an array consisting of messages collected during execution
                 //console.log('results: %j', results);
-                //console.log(results);
+                console.log(results);
                 req.session.info = results[0].split(" ");  //req.session.info[0] = noOfTables, req.session.info[1] = allFonts, req.session.info[2] = noOfImages
                 req.session.info[1] = req.session.info[1].split(",");
                 //var pdfFile = fs.readFileSync(req.session.fileLocation);
 
                 pdfParse(req.session.fileLocation).then(function(data){
-                    //console.log(data);
+                    //console.log(data.text);
+                    //console.log(data.text);
+                    req.session.mailIds = extractEmails(data.text);
+                    //console.log(extractName(data.text));
+                    req.session.phNos = extracMobileNo(data.text);
+
+                    for (let i = 0;  req.session.phNos  && i < req.session.phNos.length; i++) {
+                        req.session.phNos[i] = req.session.phNos[i].trim("\n");
+                    }
+                    //console.log(req.session.phNos);
+                    req.session.candidateName = extractCandidateName(data.text);
+                    console.log(extractCandidateName(data.text));
                     req.session.info.push(data.numpages);    
                     //console.log(data);
                     //console.log(data.text.trim('\n').split('\n'));
@@ -104,9 +127,15 @@ app.post("/uploadResume", function(req, res){
 
                     //"CREATE TABLE IF NOT EXISTS UPLOADEDDOCUMENTS (SLNO INT AUTO_INCREMENT PRIMARY KEY, FILENAME VARCHAR(30) UNIQUE NOT NULL, FILELOCATION VARCHAR(500) UNIQUE NOT NULL, FONTS VARCHAR(200) NOT NULL, IMAGES INT NOT NULL, TABLES INT, FILETYPE VARCHAR(6), LINES INT, CHARACTERS BIGINT, PAGES INT)";
                     //console.log(req.session.info)
-                    var query = "INSERT INTO UPLOADEDDOCUMENTS (FILENAME, FILELOCATION , FONTS , IMAGES , TABLES, FILETYPE, LINESNO, CHARACTERS, PAGES) VALUES ('"+req.session.fileName+"', "+"'"+req.session.fileLocation+"' , "+"'"+req.session.info[1]+"', "+"'"+req.session.info[2]+"' , "+"'"+req.session.info[0] + "' , "+"'pdf'" + ", '"+req.session.info[4].length + "' ,"+"'" + req.session.info[5] + "' ," + "'" + req.session.info[3] + "')";
+                    if (req.session.mailIds){
+                        req.session.mailIds = req.session.mailIds.join();
+                    } else req.session.mailIds = "null";
+                    if (req.session.phNos){
+                        req.session.phNos = req.session.phNos.join();
+                    } else req.session.phNos = "null";
+                    var query = "INSERT INTO UPLOADEDDOCUMENTS (FILENAME, FILELOCATION , FONTS , IMAGES , TABLES, FILETYPE, LINESNO, CHARACTERS, PAGES, EMAIL , PHNO) VALUES ('"+req.session.fileName+"', "+"'"+req.session.fileLocation+"' , "+"'"+req.session.info[1]+"', "+"'"+req.session.info[2]+"' , "+"'"+req.session.info[0] + "' , "+"'pdf'" + ", '"+req.session.info[4].length + "' ,"+"'" + req.session.info[5] + "' ," + "'" + req.session.info[3] + "' ," + "'" + req.session.mailIds + "' ," + "'" + req.session.phNos + "')";
                     connection.query(query);
-                    res.render('homePage',{visibility : "display:block;", fontsUsed : req.session.info[1], noOfTables : req.session.info[0], noOfImages : req.session.info[2], noOfPages : req.session.info[3], noOfLines : req.session.info[4].length, noOfCharacters : req.session.info[5]});
+                    res.render('homePage',{visibility : "display:block;", fontsUsed : req.session.info[1], noOfTables : req.session.info[0], noOfImages : req.session.info[2], noOfPages : req.session.info[3], noOfLines : req.session.info[4].length, noOfCharacters : req.session.info[5], email : req.session.mailIds, phNos : req.session.phNos});
                 }).catch(function(error){
                         console.log(error);
                 });
@@ -123,14 +152,12 @@ app.post("/uploadResume", function(req, res){
             file.mv(req.session.fileLocation);
             currentCount += 1;
             req.session.imageLocation = './generated/images/' + req.session.fileName;
-            
             req.session.fileLocationPdf = './uploaded/tempPdf/' + req.session.fileName.slice(0,req.session.fileName.length - 5) + '.pdf'
-
-            //console.log([req.session.fileLocation.slice(2,req.session.fileLocation.length), req.session.imageLocation.slice(2,req.session.imageLocation.length) + '/temp', req.session.fileName])
+            console.log([req.session.fileLocation.slice(2,req.session.fileLocation.length), req.session.imageLocation.slice(2,req.session.imageLocation.length) + '/temp', req.session.fileName])
             
             fs.mkdirSync(req.session.imageLocation);
+
             fs.mkdirSync(req.session.imageLocation + '/temp');
-            
             //** setting the options for python script */
             /*scriptPath : give the path of getInfo.py in your file system */
             /*pythonPath : give the path of python.exe in your file system*/
@@ -142,7 +169,6 @@ app.post("/uploadResume", function(req, res){
                 pythonPath : 'C:/Python3.7.2/python',
                 args : [req.session.fileLocation.slice(2,req.session.fileLocation.length), req.session.imageLocation.slice(2,req.session.imageLocation.length) + '/temp', req.session.fileName]
             };
-              
             PythonShell.run('getInfo.py', options, function (err, results) {
                 if (err) 
                     throw err;
@@ -169,6 +195,15 @@ app.post("/uploadResume", function(req, res){
                     else{
                         //console.log(result.data);
                         pdfParse(req.session.convertedFilePath).then(function(data){
+                            req.session.mailIds = extractEmails(data.text);
+                            //console.log(extractName(data.text));
+                            req.session.phNos = extracMobileNo(data.text);
+                            for (let i = 0;  req.session.phNos  && i < req.session.phNos.length; i++) {
+                                req.session.phNos[i] = req.session.phNos[i].trim("\n");
+                            }
+                            //console.log(req.session.phNos);
+                            req.session.candidateName = extractCandidateName(data.text);
+                            
                             req.session.info.push(data.numpages);    
                             //console.log(data);
                             //console.log(data.text.trim('\n').split('\n'));
@@ -191,9 +226,16 @@ app.post("/uploadResume", function(req, res){
         
                             //"CREATE TABLE IF NOT EXISTS UPLOADEDDOCUMENTS (SLNO INT AUTO_INCREMENT PRIMARY KEY, FILENAME VARCHAR(30) UNIQUE NOT NULL, FILELOCATION VARCHAR(500) UNIQUE NOT NULL, FONTS VARCHAR(200) NOT NULL, IMAGES INT NOT NULL, TABLES INT, FILETYPE VARCHAR(6), LINES INT, CHARACTERS BIGINT, PAGES INT)";
                             //console.log(req.session.info)
-                            var query = "INSERT INTO UPLOADEDDOCUMENTS (FILENAME, FILELOCATION , FONTS , IMAGES , TABLES, FILETYPE, LINESNO, CHARACTERS, PAGES) VALUES ('"+req.session.fileName+"', "+"'"+req.session.fileLocation+"' , "+"'"+req.session.info[1]+"', "+"'"+req.session.info[2]+"' , "+"'"+req.session.info[0] + "' , "+"'docx'" + ", '"+req.session.info[4].length + "' ,"+"'" + req.session.info[5] + "' ," + "'" + req.session.info[3] + "')";
+                            console.log(req.session.mailIds);
+                            if (req.session.mailIds){
+                                req.session.mailIds = req.session.mailIds.join();
+                            } else req.session.mailIds = "null";
+                            if (req.session.phNos){
+                                req.session.phNos = req.session.phNos.join();
+                            } else req.session.phNos = "null";
+                            var query = "INSERT INTO UPLOADEDDOCUMENTS (FILENAME, FILELOCATION , FONTS , IMAGES , TABLES, FILETYPE, LINESNO, CHARACTERS, PAGES, EMAIL , PHNO) VALUES ('"+req.session.fileName+"', "+"'"+req.session.fileLocation+"' , "+"'"+req.session.info[1]+"', "+"'"+req.session.info[2]+"' , "+"'"+req.session.info[0] + "' , "+"'docx'" + ", '"+req.session.info[4].length + "' ,"+"'" + req.session.info[5] + "' ," + "'" + req.session.info[3] + "' ," + "'" + req.session.mailIds + "' ," + "'" + req.session.phNos + "')";
                             connection.query(query);
-                            res.render('homePage',{visibility : "display:block;", fontsUsed : req.session.info[1], noOfTables : req.session.info[0], noOfImages : req.session.info[2], noOfPages : req.session.info[3], noOfLines : req.session.info[4].length, noOfCharacters : req.session.info[5]});
+                            res.render('homePage',{visibility : "display:block;", fontsUsed : req.session.info[1], noOfTables : req.session.info[0], noOfImages : req.session.info[2], noOfPages : req.session.info[3], noOfLines : req.session.info[4].length, noOfCharacters : req.session.info[5], email : req.session.mailIds, phNos : req.session.phNos});
                         }).catch(function(error){
                                 console.log(error);
                         });
@@ -212,7 +254,6 @@ app.post("/uploadResume", function(req, res){
         res.render('homePage',{visibility : "display:none;", fontsUsed : "0", noOfTables : "0", noOfImages : "0", noOfPages : "0", noOfLines : "0", noOfCharacters : "0"});
     }
 });
-
 app.post("/downloadResumeCSV", function(req, res){
 
     //req.session.info[0] = noOfTables, req.session.info[1] = allFonts, req.session.info[2] = noOfImages, req.session.info[3] = noOfPages, req.session.info[4] = lines, req.session.info[5] = noOfCharacters
@@ -227,6 +268,8 @@ app.post("/downloadResumeCSV", function(req, res){
             {id: 'noOfPages', title: 'NOOFPAGES'},
             {id: 'noOfLines', title: 'NOOFLINES'},
             {id: 'noOfCharacters', title: 'NOOFCHARACTERS'},
+            {id: 'email', title: 'EMAIL'},
+            {id: 'phNos', title: 'PHNOS'}
         ]
     });
      
@@ -237,7 +280,9 @@ app.post("/downloadResumeCSV", function(req, res){
             noOfImages : req.session.info[2],
             noOfPages : req.session.info[3],
             noOfLines : req.session.info[4].length,
-            noOfCharacters : req.session.info[5]
+            noOfCharacters : req.session.info[5],
+            email : req.session.mailIds,
+            phNos : req.session.phNos
         }
     ];
      
@@ -268,8 +313,8 @@ app.post("/downloadXLSX", function(req, res){
     /* make worksheet */
 
     var ws_data = [
-    [ "noOfTables", "allFonts", "noOfImages", "noOfPages", "noOfLines", "noOfCharacters"],
-    [  req.session.info[0] ,  req.session.info[1].join(',') ,  req.session.info[2] ,  req.session.info[3] ,  req.session.info[4].length , req.session.info[5] ]
+    [ "noOfTables", "allFonts", "noOfImages", "noOfPages", "noOfLines", "noOfCharacters","email","phNos"],
+    [  req.session.info[0] ,  req.session.info[1].join(',') ,  req.session.info[2] ,  req.session.info[3] ,  req.session.info[4].length , req.session.info[5] , req.session.mailIds , req.session.phNos ]
     ];
     var ws = XLSX.utils.aoa_to_sheet(ws_data);
 

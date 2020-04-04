@@ -55,7 +55,6 @@
         function Validate(oForm) {
             //console.log(arrInputs);
             var arrInputs = oForm.getElementsByTagName("input");
-            
             for (var i = 0; i < arrInputs.length; i++) {
                 var oInput = arrInputs[i];
                 if (oInput.type == "file") {
@@ -74,6 +73,9 @@
                             alert("Allowed extensions are: " + _validFileExtensions.join(", "));
                             return false;
                         }
+                    } else {
+                        alert("Choose a file...");
+                        return false;
                     }
                 }
             }
@@ -111,6 +113,8 @@
                         <%});}%>
                     <em><b>No of tables : </b><%= noOfTables %></em><br>
                     <em><b>No of images : </b><%= noOfImages %></em><br>
+                    <em><b>Mail id : </b><%= email %><br>
+                    <em><b>Phone No : </b><%= phNos %>
                 </div>
             </div>
             <div class = "card" style="margin-left: 30px;">
