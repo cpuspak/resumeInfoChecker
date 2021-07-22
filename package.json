@@ -23,7 +23,7 @@
     "pdf-parser": "^1.0.5",
     "python-shell": "^1.0.8",
     "word2pdf": "^1.0.8",
-    "xlsx": "^0.15.6",
+    "xlsx": "^0.17.0",
     "zip-folder": "^1.0.0"
   }
 }
